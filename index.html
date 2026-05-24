@@ -1,4 +1,15 @@
-```html
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>NeonStriker</title>
+    
+
+  </head>
+    
+  <body>
+  ```html
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -1113,160 +1124,8 @@
 
         function destroyEnemy(enemy, index) {
             enemies.splice(index, 1); player.kills++; player.score += enemy.isBoss ? 2000 : 120;
-            player.combo++; player.maxCombo = Math.max(player.maxCombo, player.combo); player.comboTimer = player.comboMaxTime;
-            
-            createParticleExplosion(enemy.x, enemy.y, enemy.color, enemy.isBoss ? 55 : 16, 6); audio.playExplosion(enemy.isBoss ? 'boss' : 'normal');
-            if (player.hasBlastImpact) createBlastWave(enemy.x, enemy.y, enemy.radius * 3.5);
-            
-            const comboMultiplier = 1 + (player.combo * 0.05); const dropCount = enemy.isBoss ? 12 : (Math.random() < 0.35 ? 2 : 1);
-            
-            for (let i = 0; i < dropCount; i++) {
-                const baseValue = enemy.isBoss ? 5 : 1; const finalValue = Math.ceil(baseValue * comboMultiplier);
-                let crystalColor = '#ffff00';
-                if (finalValue >= 3) crystalColor = '#00ff00';
-                if (finalValue >= 6) crystalColor = '#00f0ff';
-                if (finalValue >= 12) crystalColor = '#ff00ff';
-                crystals.push({ x: enemy.x + (Math.random() - 0.5) * 22, y: enemy.y + (Math.random() - 0.5) * 22, value: finalValue, color: crystalColor });
-            }
-            if (enemy.isBoss) { currentBoss = null; createTextPopup(player.x, player.y - 40, "BOSS DEFEATED!", '#ffff00'); }
-            updateHUD();
-        }
-
-        function createBlastWave(x, y, radius) {
-            createParticleExplosion(x, y, '#ffaa00', 8, 4);
-            enemies.forEach((otherEnemy) => {
-                if (Math.hypot(otherEnemy.x - x, otherEnemy.y - y) < radius) {
-                    const dmg = Math.round(player.bulletDamage * 0.85); otherEnemy.hp -= dmg;
-                    createTextPopup(otherEnemy.x, otherEnemy.y - 10, `${dmg}`, '#ffaa00');
-                }
-            });
-        }
-
-        function draw() {
-            ctx.fillStyle = '#05050e'; ctx.fillRect(0, 0, canvas.styleWidth, canvas.styleHeight);
-            ctx.save();
-            if (screenShake > 0) ctx.translate((Math.random() - 0.5) * screenShake, (Math.random() - 0.5) * screenShake);
-            drawBackgroundGrid();
-
-            crystals.forEach(c => {
-                ctx.save(); ctx.shadowBlur = 8; ctx.shadowColor = c.color; ctx.fillStyle = c.color;
-                ctx.beginPath(); ctx.arc(c.x, c.y, 4, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-            });
-
-            items.forEach(item => {
-                ctx.save(); ctx.translate(item.x, item.y);
-                if (item.type === 'heart') {
-                    ctx.shadowBlur = 15; ctx.shadowColor = '#ff007f'; ctx.fillStyle = '#ff007f';
-                    ctx.beginPath(); ctx.moveTo(0, 5); ctx.bezierCurveTo(0, -5, -10, -5, -10, -1); ctx.bezierCurveTo(-10, 5, 0, 10, 0, 12); ctx.bezierCurveTo(0, 10, 10, 5, 10, -1); ctx.bezierCurveTo(10, -5, 0, -5, 0, 5); ctx.fill();
-                    ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.beginPath(); ctx.arc(-3, -1, 1.5, 0, Math.PI*2); ctx.fill();
-                } else if (item.type === 'bomb') {
-                    ctx.shadowBlur = 15; ctx.shadowColor = '#ffaa00'; ctx.fillStyle = '#111'; ctx.strokeStyle = '#ffaa00'; ctx.lineWidth = 2;
-                    ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-                    ctx.beginPath(); ctx.moveTo(0, -8); ctx.lineTo(3, -12); ctx.stroke();
-                    ctx.fillStyle = '#ffaa00'; ctx.beginPath(); ctx.arc(3, -12, 2 + Math.random()*2, 0, Math.PI*2); ctx.fill();
-                }
-                ctx.restore();
-            });
-
-            bullets.forEach(b => {
-                ctx.save(); ctx.shadowBlur = 10; ctx.shadowColor = b.color; ctx.fillStyle = b.color;
-                ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-            });
-
-            drones.forEach(d => {
-                ctx.save(); ctx.shadowBlur = 10; ctx.shadowColor = '#9d00ff'; ctx.strokeStyle = '#9d00ff'; ctx.lineWidth = 2; ctx.fillStyle = '#06061a';
-                ctx.beginPath(); ctx.arc(d.x, d.y, 6, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.restore();
-            });
-
-            enemies.forEach(e => {
-                ctx.save(); ctx.shadowBlur = 12; ctx.shadowColor = e.color; ctx.strokeStyle = e.color; ctx.lineWidth = 3; ctx.fillStyle = '#060618';
-                ctx.beginPath();
-                if (e.shape === 'triangle') { ctx.moveTo(e.x, e.y - e.radius); ctx.lineTo(e.x + e.radius, e.y + e.radius * 0.8); ctx.lineTo(e.x - e.radius, e.y + e.radius * 0.8); }
-                else if (e.shape === 'diamond') { ctx.moveTo(e.x, e.y - e.radius); ctx.lineTo(e.x + e.radius * 0.8, e.y); ctx.lineTo(e.x, e.y + e.radius); ctx.lineTo(e.x - e.radius * 0.8, e.y); }
-                else if (e.shape === 'square') { ctx.rect(e.x - e.radius, e.y - e.radius, e.radius * 2, e.radius * 2); }
-                else if (e.shape === 'star') {
-                    let rot = Math.PI / 2 * 3, step = Math.PI / 5; ctx.moveTo(e.x, e.y - e.radius);
-                    for (let i = 0; i < 5; i++) {
-                        ctx.lineTo(e.x + Math.cos(rot) * e.radius, e.y + Math.sin(rot) * e.radius); rot += step;
-                        ctx.lineTo(e.x + Math.cos(rot) * (e.radius * 0.5), e.y + Math.sin(rot) * (e.radius * 0.5)); rot += step;
-                    }
-                }
-                ctx.closePath(); ctx.fill(); ctx.stroke();
-
-                if (e.isBoss || e.hp < e.maxHp) {
-                    const barW = e.radius * 1.8; ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.fillRect(e.x - barW/2, e.y - e.radius - 12, barW, 4);
-                    ctx.fillStyle = e.color; ctx.fillRect(e.x - barW/2, e.y - e.radius - 12, barW * Math.max(0, e.hp / e.maxHp), 4);
-                }
-                ctx.restore();
-            });
-
-            // プレイヤー
-            const currentSkin = getActiveSkin();
-            ctx.save(); 
-            ctx.shadowBlur = 15; 
-            ctx.shadowColor = currentSkin.color; 
-            ctx.strokeStyle = currentSkin.color; 
-            ctx.lineWidth = 3; 
-            ctx.fillStyle = '#080822';
-            
-            let angle = 0;
-            if (isMobile) { if (joystickVector.x !== 0 || joystickVector.y !== 0) angle = Math.atan2(joystickVector.y, joystickVector.x); }
-            else { angle = Math.atan2(mouseY - player.y, mouseX - player.x); }
-            ctx.translate(player.x, player.y); ctx.rotate(angle);
-            ctx.beginPath(); ctx.moveTo(player.radius, 0); ctx.lineTo(-player.radius * 0.8, -player.radius * 0.8); ctx.lineTo(-player.radius * 0.4, 0); ctx.lineTo(-player.radius * 0.8, player.radius * 0.8);
-            ctx.closePath(); ctx.fill(); ctx.stroke();
-            
-            ctx.shadowColor = currentSkin.flame; ctx.fillStyle = currentSkin.flame; 
-            ctx.beginPath(); ctx.rect(-player.radius * 1.1, -3, Math.random() * 8 + 6, 6); ctx.fill();
-            ctx.restore();
-
-            if (player.shieldActive) {
-                ctx.save(); const shieldColor = player.hasPlasmaLeap ? '#00ffd5' : currentSkin.color; ctx.shadowBlur = 20; ctx.shadowColor = shieldColor; ctx.strokeStyle = shieldColor; ctx.fillStyle = player.hasPlasmaLeap ? 'rgba(0, 255, 213, 0.08)' : 'rgba(0, 240, 255, 0.08)'; ctx.lineWidth = 3.5;
-                ctx.beginPath(); ctx.arc(player.x, player.y, player.radius * 2.2, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.restore();
-            }
-
-            particles.forEach(p => {
-                ctx.save(); ctx.globalAlpha = p.alpha; ctx.shadowBlur = 5; ctx.shadowColor = p.color; ctx.fillStyle = p.color;
-                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-            });
-
-            textPopups.forEach(tp => {
-                ctx.save(); ctx.globalAlpha = tp.alpha; ctx.font = 'bold 15px Orbitron'; ctx.fillStyle = tp.color; ctx.textAlign = 'center'; ctx.fillText(tp.text, tp.x, tp.y); ctx.restore();
-            });
-
-            ctx.restore();
-        }
-
-        function drawBackgroundGrid() {
-            const gridSize = 65; ctx.strokeStyle = 'rgba(0, 240, 255, 0.04)'; ctx.lineWidth = 1;
-            for (let x = 0; x < canvas.styleWidth; x += gridSize) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.styleHeight); ctx.stroke(); }
-            for (let y = 0; y < canvas.styleHeight; y += gridSize) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.styleWidth, y); ctx.stroke(); }
-        }
-
-        function loop() { update(); draw(); requestAnimationFrame(loop); }
-        requestAnimationFrame(loop);
-
-        // PWAキャッシュ
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                const swCode = `
-                    const CACHE_NAME = 'neon-striker-v5';
-                    const urlsToCache = [
-                        '/', window.location.pathname,
-                        'https://cdn.tailwindcss.com', 'https://unpkg.com/lucide@latest',
-                        'https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+JP:wght@400;700&display=swap'
-                    ];
-                    self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE_NAME).then((c) => c.addAll(urlsToCache))); });
-                    self.addEventListener('fetch', (e) => { e.respondWith(caches.match(e.request).then((res) => res || fetch(e.request))); });
-                `;
-                const blob = new Blob([swCode], { type: 'application/javascript' });
-                navigator.serviceWorker.register(URL.createObjectURL(blob))
-                    .then(reg => console.log('PWA ServiceWorker registered!'))
-                    .catch(err => console.log('ServiceWorker failed: ', err));
-            });
-        }
-    </script>
-</body>
+            player.combo++; player.maxCombo = Math.max(player.maxCombo, player.combo
+    
+  </body>
+  
 </html>
-
-```
